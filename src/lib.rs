@@ -120,7 +120,7 @@ fn get_todos() -> Option<Vec<Todo>> {
             title: title.to_string(),
             content: content.to_owned(),
             urgency: Urgency::from(urgency),
-        })
+        });
     }
     Some(todos)
 }
@@ -157,7 +157,7 @@ fn save_todos(todos: Vec<Todo>) -> crossterm::Result<()> {
         file.write_all(
             todos
                 .iter()
-                .map(|todo| todo.to_string())
+                .map(ToString::to_string)
                 .collect::<Vec<String>>()
                 .join("\n")
                 .as_bytes(),
@@ -179,19 +179,17 @@ pub fn run(command: Command) -> crossterm::Result<()> {
             save_todos(todos)?;
         }
         Commands::Remove(title) => {
-            let rm_idx = match todos
+            let (rm_idx, _) = if let Some(idx) = todos
                 .iter()
                 .enumerate()
-                .filter(|(_, todo)| todo.title == title)
-                .map(|(i, _)| i)
-                .next()
+                .find(|(_, todo)| todo.title == title)
             {
-                Some(v) => v,
-                None => {
-                    eprintln!("Found no TODO with title: {title}");
-                    return Ok(());
-                }
+                idx
+            } else {
+                eprintln!("Found no TODO with title: {title}");
+                return Ok(());
             };
+
             todos.remove(rm_idx);
             save_todos(todos)?;
         }
