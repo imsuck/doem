@@ -1,7 +1,7 @@
 [package]
 name = "doem"
 version = "0.1.0"
-description = "Generic terminal TODO program"
+description = "Generic terminal-based TODO app."
 license = "MIT"
 edition = "2021"
 

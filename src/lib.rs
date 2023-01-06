@@ -1,7 +1,7 @@
 #![deny(missing_docs, rust_2018_idioms, clippy::perf)]
 
 //! Doem
-//! Generic TODO program.
+//! Generic terminal-based TODO app.
 
 use std::fmt::Display;
 use std::io::{stdout, ErrorKind, Write};
@@ -15,11 +15,11 @@ enum Commands {
     List,
 }
 
-/// Commands
+/// Command for the app to run.
 pub struct Command(Commands);
 
 impl Command {
-    /// Adds a TODO
+    /// Adds a TODO.
     pub fn add(title: String, content: String, urgency: String) -> Option<Self> {
         let urgency = match urgency.as_str() {
             "l" | "low" => Urgency::Low,
@@ -34,11 +34,11 @@ impl Command {
             urgency,
         })))
     }
-    /// Removes a TODO
+    /// Removes a TODO.
     pub fn remove(title: String) -> Self {
         Self(Commands::Remove(title))
     }
-    /// Lists TODOs
+    /// Lists TODOs.
     pub fn list() -> Self {
         Self(Commands::List)
     }
@@ -170,7 +170,7 @@ fn save_todos(todos: Vec<Todo>) -> crossterm::Result<()> {
     Ok(())
 }
 
-/// Runs the program
+/// Runs the program.
 pub fn run(command: Command) -> crossterm::Result<()> {
     let mut todos = get_todos().unwrap_or_default();
     match command.0 {

@@ -3,16 +3,16 @@ use clap::Parser;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Adds a TODO
+    /// Adds a TODO.
     #[arg(id = "title", short = 'a', long = "add")]
     add: Option<String>,
-    /// TODO content
+    /// TODO content.
     #[arg(id = "content", short = 'c', long)]
     content: Option<String>,
-    /// TODO urgency
+    /// TODO urgency.
     #[arg(id = "urgency", short = 'u', long)]
     urgency: Option<String>,
-    /// Removes a TODO
+    /// Removes a TODO.
     #[arg(id = "target", short = 'r', long = "remove")]
     remove: Option<String>,
 }
