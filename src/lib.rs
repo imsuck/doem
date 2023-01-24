@@ -5,6 +5,7 @@
 
 use std::fmt::Display;
 use std::io::{stdout, ErrorKind, Write};
+use std::str::FromStr;
 
 use crossterm::queue;
 use crossterm::style::{Attribute, Color, Print, SetAttribute, SetForegroundColor};
@@ -51,13 +52,14 @@ enum Urgency {
     High,
 }
 
-impl From<&str> for Urgency {
-    fn from(str: &str) -> Self {
+impl FromStr for Urgency {
+    type Err = String;
+    fn from_str(str: &str) -> Result<Self, Self::Err> {
         match str {
-            "Low" => Self::Low,
-            "Medium" => Self::Medium,
-            "High" => Self::High,
-            _ => todo!(), // What do I do?
+            "Low" => Ok(Self::Low),
+            "Medium" => Ok(Self::Medium),
+            "High" => Ok(Self::High),
+            _ => Err("Failed to convert `str` to `Urgency`".to_owned()),
         }
     }
 }
@@ -86,28 +88,24 @@ impl Display for Todo {
 }
 
 fn read_todos() -> Option<String> {
-    if let Some(dir) = home::home_dir() {
-        let dir = format!("{}/TODO", dir.display());
-        let file = match std::fs::read_to_string(&dir) {
-            Ok(file) => file,
-            Err(err) => {
-                match err.kind() {
-                    ErrorKind::NotFound => match std::fs::write(dir, "") {
-                        Ok(_) => (),
-                        Err(err) => eprintln!("Failed to create TODO file: {:?}", err),
-                    },
-                    other_err => {
-                        eprintln!("Failed to read TODO file: {:?}", other_err);
+    let dir = format!("{}/TODO", home::home_dir()?.display());
+    let file = match std::fs::read_to_string(&dir) {
+        Ok(file) => file,
+        Err(err) => {
+            match err.kind() {
+                ErrorKind::NotFound => {
+                    if let Err(err) = std::fs::write(dir, "") {
+                        eprintln!("Failed to create TODO file: {:?}", err)
                     }
                 }
-                return None;
+                other_err => {
+                    eprintln!("Failed to read TODO file: {:?}", other_err);
+                }
             }
-        };
-        Some(file)
-    } else {
-        eprintln!("Failed to find home directory");
-        None
-    }
+            return None;
+        }
+    };
+    Some(file)
 }
 
 /// Gets and parses TODO.
@@ -116,10 +114,11 @@ fn get_todos() -> Option<Vec<Todo>> {
     for line in read_todos()?.lines() {
         let (urgency, line) = line.split_once('|').expect("Incorrect TODO syntax");
         let (title, content) = line.split_once(": ").expect("Incorrect TODO syntax");
+        let urgency = Urgency::from_str(urgency).expect("Incorrect TODO syntax");
         todos.push(Todo {
-            title: title.to_string(),
+            title: title.to_owned(),
             content: content.to_owned(),
-            urgency: Urgency::from(urgency),
+            urgency,
         });
     }
     Some(todos)
