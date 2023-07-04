@@ -21,26 +21,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let mut command: doem::Command = doem::Command::list();
 
-    if args.add.is_some() && args.remove.is_none() {
-        let content = match args.content {
-            Some(val) => val,
-            None => {
-                eprintln!("Please provide TODO's content (--content)");
-                return Ok(());
-            }
-        };
-        let urgency = match args.urgency {
-            Some(val) => val,
-            None => {
-                eprintln!("Please provide TODO's urgency (--urgency)");
-                return Ok(());
-            }
-        };
-        command = doem::Command::add(args.add.expect("???"), content, urgency).unwrap();
-    } else if args.remove.is_some() && args.add.is_none() {
-        command = doem::Command::remove(args.remove.expect("???"));
-    } else if args.add.is_some() && args.remove.is_some() {
-        eprintln!("Please don't use --add and --remove at the same time");
+    match (args.add.is_some(), args.remove.is_some()) {
+        (true, false) => {
+            let content = match args.content {
+                Some(val) => val,
+                None => {
+                    eprintln!("Please provide TODO's content (--content)");
+                    return Ok(());
+                }
+            };
+            let urgency = match args.urgency {
+                Some(val) => val,
+                None => {
+                    eprintln!("Please provide TODO's urgency (--urgency)");
+                    return Ok(());
+                }
+            };
+            command = doem::Command::add(args.add.unwrap(), content, urgency).unwrap();
+        }
+        (false, true) => command = doem::Command::remove(args.remove.unwrap()),
+        (true, true) => eprintln!("Please don't use --add and --remove at the same time"),
+        (_, _) => (),
     }
 
     doem::run(command)?;
